@@ -72,4 +72,88 @@ public class CafeOrder
         Console.WriteLine($"Total Cost: ${beverage.Cost():0.00}");
     }
 }
+public interface IPaymentProcessor
+{
+    void ProcessPayment(double amount)
+    {
+        Console.WriteLine($"Processing Paypal payment of ${amount:0.00}");
+
+    }
+}
+public class StripePaymentService
+{
+    public void MakeTransaction(double totalAmount)
+    {
+        Console.WriteLine($"Processing Stripe transaction of ${totalAmount:0.00}");
+    }
+
+    internal void ProcessSquarePayment(double amount)
+    {
+        throw new NotImplementedException();
+    }
+}
+ 
+public class StripePaymentAdapter : IPaymentProcessor
+{
+    private readonly StripePaymentService stripePaymentService;
+    private StripePaymentService _stripePaymentService;
+
+    public StripePaymentAdapter(StripePaymentService stripePaymentService)
+    {
+        _stripePaymentService = stripePaymentService;
+    }
+    public void ProcessPayment(double amount)
+    {
+        _stripePaymentService.MakeTransaction(amount);
+    }
+}
+public class SquarePaymentService
+{
+    public void ProcessSquarePayment(Double amount)
+    {
+        Console.WriteLine($"Processing Square payment of ${amount:0.00}");
+
+    }
+}
+
+public class SquarePaymentAdapter : IPaymentProcessor
+{
+    private readonly StripePaymentService _stripePaymentService;
+
+    public SquarePaymentAdapter(
+        StripePaymentService stripePaymentService)
+    {
+        _stripePaymentService = stripePaymentService;
+    }
+    public void ProcessPayment(double amount)
+    {
+        _stripePaymentService.ProcessSquarePayment(amount);
+    }
+}
+public class PaymentClient
+{
+    public static void ProcessPayments()
+    {
+        IPaymentProcessor paypal = new PayPalPaymentProcessor();
+        paypal.ProcessPayment(50.0);
+
+        IPaymentProcessor stripe = new StripePaymentAdapter(new StripePaymentService());
+        stripe.ProcessPayment(75.0);
+
+        IPaymentProcessor square = new SquarePaymentAdapter(new SquarePaymentService());
+        square.ProcessPayment(100.0);
+    }
+}
+ public class Program
+{
+    public static void Main()
+    {
+        Console.WriteLine("--- Zakaz v coffee----");
+        CafeOrder.CreateOrder();
+        Console.WriteLine("\n---- Oplata zakaza----");
+        PaymentClient.ProcessPayments();
+    }
+}
+
+
 
